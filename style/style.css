@@ -1,0 +1,29 @@
+#fun{
+  position: absolute;
+  width:100%;
+  height:100%;
+
+}
+
+#logval{
+  font-size:100px;
+  text-align:center;
+
+}
+
+body{
+  overflow: hidden;
+  margin:0px;
+}
+
+
+#press{
+  width:100%;
+  height:50%;
+  position:absolute;
+  text-align:center;
+  font-size:200px;
+  font-family:"helvetica";
+  font-weight:900;
+}
+
