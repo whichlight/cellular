@@ -2,6 +2,7 @@ var context;
 var $fun;
 var synth;
 var graphic;
+var emitter;
 var noteVal = 400;
 var t = new Date();
 var socket = io.connect('http://'+window.location.hostname);
@@ -54,6 +55,8 @@ var setup = function(){
   checkFeatureSupport();
   synth = new Synth();
   graphic = new Graphic();
+  emitter = new SampleBatchEmitter();
+
   $fun = $("#fun");
 
   //add events
@@ -90,7 +93,7 @@ var touchDeactivate = function(e){
 function deviceMotionHandler(eventData) {
   synth.accelHandler(eventData);
   graphic.accelHandler(eventData);
-  socket.emit('motion', { data : eventData.acceleration});
+  emitter.pushd(eventData.acceleration);
 }
 
 function devOrientHandler(eventData) {
@@ -100,6 +103,34 @@ function devOrientHandler(eventData) {
 
 
 //sample + batch acceleration values. only submit if nonzero
+function SampleBatchEmitter(){
+  this.sample_rate= 40;
+  this.emit_rate = 500;
+  this.data = [];
+  this.read = true;
+  this.emitd();
+
+}
+
+SampleBatchEmitter.prototype.pushd = function(d){
+  if(this.read===true){
+    this.data.push(d);
+    this.read = false;
+    var that = this;
+    setTimeout(function(){that.read = true;}, that.sample_rate);
+  };
+}
+
+SampleBatchEmitter.prototype.emitd = function(){
+  var that = this;
+  setInterval(function(){
+    if(that.data.length>0){
+      socket.emit('motion', {data:that.data});
+      that.data = [];
+      console.log('emit');
+    }
+  },that.emit_rate);
+}
 
 
 function map_range(value, low1, high1, low2, high2) {
