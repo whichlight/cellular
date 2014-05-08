@@ -45,31 +45,53 @@ function Cell(id, color){
   this.material = new THREE.MeshLambertMaterial( { color: this.color } );
   this.cube = new THREE.Mesh( this.geometry, this.material );
   this.cube.scale.x =2;
-  this.cube.scale.y =0.5;
-  this.cube.scale.z =4;
+  this.cube.scale.y =2;
+  this.cube.scale.z =2;
   scene.add(this.cube);
 }
 
 Cell.prototype.update = function(x,y,z, gamma, beta, color){
-  this.acceleration.x = -1*x;
-  this.acceleration.y = -1*z;
-  this.acceleration.z = y;
 
-  //add accel to center
-  center = new THREE.Vector3();
 
-  center.sub(this.cube.position);
-  //center.normalize();
+  var accelVal = Math.max(x,y,z);
 
-  this.acceleration = this.acceleration.add(center);
-
-  this.velocity.add(this.acceleration.multiplyScalar(0.5));
-  this.cube.position.add(this.velocity.multiplyScalar(0.5));
   this.cube.rotation.z =-1*gamma*0.0174532925;
   this.cube.rotation.x =beta*0.0174532925;
   this.color = color;
   this.cube.material.color.set(color);
+
+  var theta = this.cube.rotation.z +Math.PI/2;
+  var phi = this.cube.rotation.x;
+
+  var lx = Math.cos(theta);
+  var ly = Math.sin(theta);
+  var lz = Math.sin(phi);
+
+
+  this.acceleration = new THREE.Vector3(0,0,0);
+  this.acceleration.add(v(lx,ly,2*lz).multiplyScalar(accelVal/10));
+
+//  this.acceleration = this.acceleration.add(center.multiplyScalar(0.2));
+   this.velocity.add(this.acceleration.multiplyScalar(0.8));
+   this.cube.position.add(this.velocity.multiplyScalar(0.5));
+
+
 }
+
+Cell.prototype.toCenter = function(){
+
+  this.cube.rotation.z/=1.01;
+  this.cube.rotation.x/=1.01;
+
+  center = new THREE.Vector3();
+  center.sub(this.cube.position);
+  center.divideScalar(center.length());
+  center.multiplyScalar(0.1);
+  this.acceleration = this.acceleration.add(center);
+   this.velocity.add(this.acceleration.multiplyScalar(0.5));
+   this.cube.position.add(this.velocity.multiplyScalar(0.5));
+}
+
 
 Cell.prototype.read = function(actions){
   //x,y,z,dt
@@ -87,19 +109,24 @@ Cell.prototype.step = function(){
       this.update(a.x, a.y, a.z, a.gamma, a.beta, a.color);
     }
   } else{
-//      this.update(0, 0, 0, 0,0, this.color);
+      this.toCenter();
   }
 }
 
 
 
+function v( x, y, z ){ return new THREE.Vector3( x, y, z ); }
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 500, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.z = 10;
+var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.position.z = 100;
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+
+
+
+
 
 var pointLight =
   new THREE.PointLight(0xFFFFFF);
@@ -111,6 +138,8 @@ pointLight.position.z = 130;
 
 // add to the scene
 scene.add(pointLight);
+
+
 
 
 function update(){

@@ -329,7 +329,7 @@ Synth.prototype.accelHandler = function(accel){
 
   var change =map_range(accelVal, 0, 15, 100,1500);
   var qchange = quantize(change, q_notes)
-    $("#logval").html(Math.round(orientEvent.gamma));
+    $("#logval").html(Math.round(orientEvent.beta));
   var interval = (new Date() - t)/1000;
 
   if(this.activated && ( interval >1/(accelVal+5))){
