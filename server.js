@@ -2,6 +2,9 @@ var app = require('http').createServer(handler).listen(8080)
 , fs = require('fs')
 , io = require('socket.io').listen(app);
 
+io.set('log level', 1);
+var muralSocket;
+
 function handler (req, res) {
   if(req.url === "/"){
     fs.readFile(__dirname + '/index.html',
@@ -27,9 +30,14 @@ function handler (req, res) {
 }
 
 io.sockets.on('connection', function(socket){
-  console.log('connected');
+  socket.on('identify', function(data){
+    muralSocket = socket;
+  });
   socket.on('motion',function(data){
-    console.log(data);
+    if(typeof muralSocket != "undefined"){
+      data.id = socket.id;
+      muralSocket.emit('mural',{data:data});
+    }
   });
 });
 

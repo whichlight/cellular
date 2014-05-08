@@ -6,7 +6,11 @@ var emitter;
 var noteVal = 400;
 var t = new Date();
 var socket = io.connect('http://'+window.location.hostname);
+var isDesktop = false;
 
+
+//[x,y,z],color, type
+//
 socket.on('connect', function(){
   console.log('connected');
 });
@@ -26,6 +30,10 @@ var D_chord = [146.83,220.00,293.66];
  accel events and touch mapped to Synth and Graphic
  Synth plays notes
  Graphic does visuals
+
+accel
+map_range(accelVal, 0, 15, 100,1500);
+
  *
  */
 
@@ -45,8 +53,16 @@ var checkFeatureSupport = function(){
     alert('web audio not supported');
   }
 
-  if (!window.DeviceMotionEvent) {
-    alert("DeviveMotionEvent not supported");
+  try{
+    motionContext = window.DeviceMotionEvent;
+  }
+  catch (err){
+    console.log('motion not supported');
+  }
+  if (! (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) ) {
+    // some code..
+    isDesktop = true;
+    console.log('desktop');
   }
 }
 
@@ -58,6 +74,10 @@ var setup = function(){
   emitter = new SampleBatchEmitter();
 
   $fun = $("#fun");
+
+  var c  = HSVtoRGB(base_color,1,1);
+  graphic.background_color = "rgb("+c.r+","+c.g+","+c.b+")" ;
+
 
   //add events
   $fun.bind("mousedown", touchActivate);
@@ -71,6 +91,10 @@ var setup = function(){
 
   if (window.DeviceOrientationEvent) {
     window.addEventListener('deviceorientation', devOrientHandler, false);
+  }
+
+  if(isDesktop){
+    $(window).mousemove(desktopMotionHandler);
   }
 
 }
@@ -93,7 +117,8 @@ var touchDeactivate = function(e){
 function deviceMotionHandler(eventData) {
   synth.accelHandler(eventData);
   graphic.accelHandler(eventData);
-  emitter.pushd(eventData.acceleration);
+  var a = eventData.acceleration;
+  emitter.pushd({x:a.x, y:a.y, z:a.z, gamma: orientEvent.gamma , beta: orientEvent.beta , color: graphic.background_color});
 }
 
 function devOrientHandler(eventData) {
@@ -101,19 +126,33 @@ function devOrientHandler(eventData) {
   graphic.orientHandler(eventData);
 }
 
+function desktopMotionHandler(eventData) {
+
+  if(synth.activated){
+    w =  $(window).width();
+    h = $(window).height();
+  x = 16*(eventData.pageX -w/2)/w;
+  y = 16*(-1*eventData.pageY + h/2)/h;
+
+  emitter.pushd({x: x, z: y, y:0, color: graphic.background_color});
+  }
+
+}
+
 
 //sample + batch acceleration values. only submit if nonzero
 function SampleBatchEmitter(){
-  this.sample_rate= 40;
+  this.sample_rate= 30;
   this.emit_rate = 500;
   this.data = [];
   this.read = true;
   this.emitd();
-
+  this.startTime;
 }
 
 SampleBatchEmitter.prototype.pushd = function(d){
-  if(this.read===true){
+  if(this.read===true  && graphic.activated){
+    d.deltaTime = (new Date().getTime() - this.startTime);
     this.data.push(d);
     this.read = false;
     var that = this;
@@ -124,8 +163,12 @@ SampleBatchEmitter.prototype.pushd = function(d){
 SampleBatchEmitter.prototype.emitd = function(){
   var that = this;
   setInterval(function(){
+    that.startTime = new Date().getTime();
     if(that.data.length>0){
-      socket.emit('motion', {data:that.data});
+      socket.emit('motion', {
+          color: graphic.background_color,
+          type: "mobile",
+          actions: that.data});
       that.data = [];
       console.log('emit');
     }
@@ -142,7 +185,7 @@ function Pluck(f){
   this.gain;
   this.osc;
   this.played = false;
-  this.volume = 0.5;
+  this.volume = map_range(f,100,1500,0.6, 0.4);//based on F range
   this.pitch = f;
   this.buildSynth();
   this.duration = 1;
@@ -202,7 +245,7 @@ function Drone(f){
   this.gain;
   this.osc;
   this.played = false;
-  this.volume = 0.3;
+  this.volume = 0.5;
   this.pitch = f;
   this.buildSynth();
   this.play();
@@ -286,7 +329,7 @@ Synth.prototype.accelHandler = function(accel){
 
   var change =map_range(accelVal, 0, 15, 100,1500);
   var qchange = quantize(change, q_notes)
-    $("#logval").html(Math.round(qchange));
+    $("#logval").html(Math.round(orientEvent.gamma));
   var interval = (new Date() - t)/1000;
 
   if(this.activated && ( interval >1/(accelVal+5))){
