@@ -51,9 +51,20 @@ function Cell(id, color){
 }
 
 Cell.prototype.update = function(x,y,z, gamma, beta, color){
-  this.cube.position.x = -1*x;
-  this.cube.position.y = -1*z;
-  this.cube.position.z = y;
+  this.acceleration.x = -1*x;
+  this.acceleration.y = -1*z;
+  this.acceleration.z = y;
+
+  //add accel to center
+  center = new THREE.Vector3();
+
+  center.sub(this.cube.position);
+  //center.normalize();
+
+  this.acceleration = this.acceleration.add(center);
+
+  this.velocity.add(this.acceleration.multiplyScalar(0.5));
+  this.cube.position.add(this.velocity.multiplyScalar(0.5));
   this.cube.rotation.z =-1*gamma*0.0174532925;
   this.cube.rotation.x =beta*0.0174532925;
   this.color = color;
@@ -76,7 +87,7 @@ Cell.prototype.step = function(){
       this.update(a.x, a.y, a.z, a.gamma, a.beta, a.color);
     }
   } else{
-    //  this.update(0, 0, 0, 0,0, this.color);
+//      this.update(0, 0, 0, 0,0, this.color);
   }
 }
 
