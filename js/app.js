@@ -143,7 +143,7 @@ function desktopMotionHandler(eventData) {
 //sample + batch acceleration values. only submit if nonzero
 function SampleBatchEmitter(){
   this.sample_rate= 30;
-  this.emit_rate = 500;
+  this.emit_rate = 200;
   this.data = [];
   this.read = true;
   this.emitd();

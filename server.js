@@ -36,6 +36,7 @@ io.sockets.on('connection', function(socket){
   socket.on('motion',function(data){
     if(typeof muralSocket != "undefined"){
       data.id = socket.id;
+      //batch this
       muralSocket.emit('mural',{data:data});
     }
   });
