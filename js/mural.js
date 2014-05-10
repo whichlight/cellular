@@ -4,6 +4,9 @@ var socket = io.connect('http://'+window.location.hostname);
 var cells = {};
 stepRate = 30;
 
+var group = new THREE.Object3D();
+
+
 //x,y,z,color,id
 
 socket.on('connect', function(){
@@ -28,6 +31,69 @@ $(document).ready(function(){
 });
 
 
+var particleCount = 1800,
+    particles = new THREE.Geometry(),
+    pMaterial =
+      new THREE.ParticleBasicMaterial({
+        size: 10,
+        transparent: true
+      });
+var particleSystem =
+  new THREE.ParticleSystem(
+    particles,
+    pMaterial);
+
+
+
+for(var p = 0; p < particleCount; p++) {
+    var v = new THREE.Vector3(Math.random() * 200 - 100, Math.random() * 100 + 150, Math.random() * 50 );
+    v.isDirty=true;
+    particles.vertices.push(v);
+}
+SPARKS.VectorPool.__pools = particles.vertices;
+
+  var counter = new SPARKS.SteadyCounter(500);
+  var emitter = new SPARKS.Emitter( counter );
+
+  var h = 0;
+  emitter.addInitializer(new SPARKS.Target(null, function(){
+    var material = new THREE.ParticleCanvasMaterial( {  program: SPARKS.CanvasShadersUtils.circles , blending:THREE.AdditiveBlending } );
+
+    material.color.setHSL(h, 1, 0.5); //0.7
+    h += 0.001;
+    if (h>1) h-=1;
+
+    var particle = new THREE.Particle( material );
+
+    particle.scale.x = particle.scale.y = Math.random() * 2 +1;
+    group.add( particle );
+
+    return particle;
+  }));
+  emitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone(new THREE.Vector3(0,0,0))));
+  emitter.addInitializer(new SPARKS.Lifetime(1,15));
+  emitter.addInitializer(new SPARKS.Velocity(new SPARKS.PointZone(new THREE.Vector3(0,-5,1))));
+  emitter.addAction( new SPARKS.Age() );
+  emitter.addAction( new SPARKS.Accelerate( 0, 0, -50 ) );
+  emitter.addAction( new SPARKS.Move() );
+  emitter.addAction( new SPARKS.RandomDrift( 90, 100, 2000 ) );
+  emitter.start();
+
+emitter.addCallback("created", function(p) {
+                    var position = p.position;
+                    p.target.position = position;
+                });
+
+                emitter.addCallback("initialized", function(particle) {
+                    var position = p.position;
+                    p.target.position = position;
+                });
+
+                emitter.addCallback("dead", function(particle) {
+                    particle.target.visible = false; // is this a work around?
+                    group.remove(particle.target);
+
+                });
 
 function Cell(id, color){
   this.id = id;
@@ -40,9 +106,6 @@ function Cell(id, color){
   this.acceleration = new THREE.Vector3(0,0,0);
 
 
-
-
-
   //create geometry
   this.geometry = new THREE.CubeGeometry(1,1,1);
   this.material = new THREE.MeshLambertMaterial( { color: this.color } );
@@ -53,24 +116,13 @@ function Cell(id, color){
   scene.add(this.cube);
 
   //particles
-  this.counter    = new SPARKS.SteadyCounter( 500 );
-  this.emitter   = new SPARKS.Emitter( counter );
-  this.emitter.start();
 
-  this.emitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone(new THREE.Vector3(0,0,0))));
-  this.emitter.addInitializer(new SPARKS.Lifetime(1,15));
-  this.emitter.addInitializer(new SPARKS.Velocity(new Sparks.PointZone(new THREE.Vector3(0,-5,1))));
-  this.emitter.addAction( new SPARKS.Age() );
-  this.emitter.addAction( new SPARKS.Accelerate( 0, 0, -50 ) );
-  this.emitter.addAction( new SPARKS.Move() );
-  this.emitter.addAction( new SPARKS.RandomDrift( 90, 100, 2000 ) );
 }
 
 Cell.prototype.update = function(x,y,z, gamma, beta, color){
 
 
   var accelVal = Math.max(x,y,z);
-
   this.cube.rotation.z =-1*gamma*0.0174532925;
   this.cube.rotation.x =beta*0.0174532925;
   this.color = color;
@@ -86,13 +138,10 @@ Cell.prototype.update = function(x,y,z, gamma, beta, color){
 
 
   this.acceleration = new THREE.Vector3(0,0,0);
-  this.acceleration.add(v(lx,ly,2*lz).multiplyScalar(accelVal/20));
-
+  this.acceleration.add(vec(lx,ly,2*lz).multiplyScalar(accelVal/20));
 //  this.acceleration = this.acceleration.add(center.multiplyScalar(0.2));
    this.velocity.add(this.acceleration.multiplyScalar(0.8));
-
    this.cube.position.add(this.velocity.clone().multiplyScalar(0.5));
-
    this.cube.position = boundingEnv(this.cube.position)
 }
 
@@ -120,11 +169,6 @@ Cell.prototype.toCenter = function(){
 }
 
 Cell.prototype.slow= function(){
-
-  this.cube.rotation.y+=0.01;
- // this.cube.rotation.x+=0.01;
-
-//  center.sub(this.cube.position);
    this.velocity.divideScalar(1.05);
    this.cube.position.add(this.velocity.clone().multiplyScalar(0.5));
 }
@@ -148,15 +192,14 @@ Cell.prototype.step = function(){
   } else if(this.velocity.length()>0.1){
     this.slow();
 } else {
-//      this.toCenter();
-
+//  this.toCenter();
     this.slow();
   }
 }
 
 
 
-function v( x, y, z ){ return new THREE.Vector3( x, y, z ); }
+function vec( x, y, z ){ return new THREE.Vector3( x, y, z ); }
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -169,8 +212,7 @@ document.body.appendChild( renderer.domElement );
 
 
 
-var pointLight =
-  new THREE.PointLight(0xFFFFFF);
+var pointLight = new THREE.PointLight(0xFFFFFF);
 
 // set its position
 pointLight.position.x = 10;
@@ -180,7 +222,7 @@ pointLight.position.z = 130;
 // add to the scene
 scene.add(pointLight);
 
-
+scene.add( group);
 
 
 function update(){
