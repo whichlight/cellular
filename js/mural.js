@@ -14,6 +14,8 @@ var delta = 1, clock = new THREE.Clock();
 var widthRange = 500;
 
 
+cells['screensaver']= {activated: true, step: function(){}};
+
 //x,y,z,color,id
 
 socket.on('connect', function(){
@@ -32,7 +34,6 @@ socket.on('removeCell', function(data){
 
 $(document).ready(function(){
   initParticleSystem();
-
 
   socket.on('mural', function(data){
     //unpack muralevents, it is id and array
@@ -117,8 +118,6 @@ var initParticleSystem = function(){
    particleCloud.y = 800;
 
 
-   var hue = 0;
-
    var setTargetParticle = function() {
 
      var target = Pool.get();
@@ -134,19 +133,39 @@ var initParticleSystem = function(){
 
      var id = Object.keys(cells)[randArray(Object.keys(cells))];
      if(typeof(cells[id]) !== 'undefined' && cells[id].activated){
-       var position = cells[id].emitterPos.clone();
-       p.position = position.clone();
-       p.velocity.x = cells[id].velocity.x;
-       p.velocity.y = cells[id].velocity.y;
-       var velocity = p.velocity;
-       p.target.velocity= velocity;
-       var target = p.target;
+       if(id=="screensaver"){
+         var W = window.innerWidth*2;
+         var x = Math.random()*W -W/2;
+         var z = -500-1*Math.random()*1000;
+         var position = new THREE.Vector3(x,800, z);
+         p.position = position.clone();
+         var target = p.target;
+         if ( target ) {
+           emitterpos.x = position.x;
+           emitterpos.y = position.y;
+           emitterpos.z = position.z;
+           p.velocity.x = 0;
+           p.velocity.y = 100;
+           var velocity = p.velocity;
+           p.target.velocity= velocity;
+           particles.vertices[ target ] = p.position;
+           values_color[ target ].setHSL( 0.5+Math.random()*0.25, Math.random()*0.4, Math.random()*0.8 );
+         }
+       } else{
+         var position = cells[id].emitterPos.clone();
+         p.position = position.clone();
+         p.velocity.x = cells[id].velocity.x;
+         p.velocity.y = cells[id].velocity.y;
+         var velocity = p.velocity;
+         p.target.velocity= velocity;
+         var target = p.target;
 
-       if ( target ) {
-         emitterpos.x = cells[id].emitterPos.x;
-         emitterpos.y = 0;
-         particles.vertices[ target ] = p.position;
-         values_color[ target ].setHSL( cells[id].color.getHSL().h, 0.6, 0.1 );
+         if ( target ) {
+           emitterpos.x = cells[id].emitterPos.x;
+           emitterpos.y = 0;
+           particles.vertices[ target ] = p.position;
+           values_color[ target ].setHSL( cells[id].color.getHSL().h, 0.6, 0.1 );
+         }
        }
      };
    };
