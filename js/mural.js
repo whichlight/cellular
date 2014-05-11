@@ -11,6 +11,8 @@ var speed = 50;
 var particleCloud, sparksEmitter, emitterPos;
 var delta = 1, clock = new THREE.Clock();
 
+var widthRange = 500;
+
 
 //x,y,z,color,id
 
@@ -132,25 +134,19 @@ var initParticleSystem = function(){
 
      var id = Object.keys(cells)[randArray(Object.keys(cells))];
      if(typeof(cells[id]) !== 'undefined' && cells[id].activated){
-       console.log(id);
-       var position = p.position;
-       p.target.position = position;
-       p.velocity.x = 0;
-       p.velocity.y = 10;
+       var position = cells[id].emitterPos.clone();
+       p.position = position.clone();
+       p.velocity.x = cells[id].velocity.x;
+       p.velocity.y = cells[id].velocity.y;
        var velocity = p.velocity;
        p.target.velocity= velocity;
        var target = p.target;
 
        if ( target ) {
-         if ( hue > 1 ) hue -= 1;
-         emitterpos.x = 0;
+         emitterpos.x = cells[id].emitterPos.x;
          emitterpos.y = 0;
-         pointLight.position.x = emitterpos.x;
-         pointLight.position.y = emitterpos.y;
-         pointLight.position.z = 10;
          particles.vertices[ target ] = p.position;
-         values_color[ target ].setHSL( cells[id].getHSL().h, 0.6, 0.1 );
-         pointLight.color.setHSL( cells[id].getHSL().h, 0.8, 0.5 );
+         values_color[ target ].setHSL( cells[id].color.getHSL().h, 0.6, 0.1 );
        }
      };
    };
@@ -168,7 +164,6 @@ var initParticleSystem = function(){
    };
 
    var engineLoopUpdate = function() {
-
    };
 
    sparksEmitter = new SPARKS.Emitter( new SPARKS.SteadyCounter( 500 ) );
@@ -184,13 +179,15 @@ var initParticleSystem = function(){
          SPARKS.PointZone( new THREE.Vector3( 0, 200, 0 ) ) ) );
 
    sparksEmitter.addAction( new SPARKS.Age() );
-   sparksEmitter.addAction( new SPARKS.Accelerate( 0, -90, 0 ) );
+   sparksEmitter.addAction( new SPARKS.Accelerate( 0, -90, -100 ) );
    sparksEmitter.addAction( new SPARKS.Move() );
-   sparksEmitter.addAction( new SPARKS.RandomDrift( 90, 100, 500 ) );
+   sparksEmitter.addAction( new SPARKS.RandomDrift( 90, 100, 2000 ) );
 
 
    sparksEmitter.addCallback( "created", onParticleCreated );
    sparksEmitter.addCallback( "dead", onParticleDead );
+   //sparksEmitter.addCallback("loopUpdated", engineLoopUpdate);
+
 
    //weird hack
    sparksEmitter._actions[0]._easing = TWEEN.Easing.Linear.None;
@@ -273,20 +270,25 @@ function Cell(id, color){
   this.activated = false;
   this.intensity = 0;
   this.angle;
+  var W = window.innerWidth;
+  var w = Math.random()*widthRange;
+  var xpos = (-1*W/2)+ ((W - widthRange)/2)+(w)
+  this.emitterPos = new THREE.Vector3(xpos,0,0);
 
 }
 
 Cell.prototype.update = function(x,y,z, gamma, beta, color){
   this.intensity = Math.max(x,y,z);
   this.activated = this.intensity > 0.5;
-  if(this.activated){
-    console.log('activated');
-    this.color.set(color);
 
+
+  if(this.activated){
+    this.color.set(color);
+    var theta =-1*gamma*0.0174532925 + Math.PI/2;
     var lx = Math.cos(theta);
     var ly = Math.sin(theta);
-    this.velocity.x = this.intensity * lx;
-    this.velocity.y = this.intensity * ly;
+    this.velocity.x = 20*this.intensity * lx;
+    this.velocity.y = 20*this.intensity * ly;
   }
 }
 

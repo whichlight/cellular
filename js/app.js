@@ -329,7 +329,7 @@ Synth.prototype.accelHandler = function(accel){
 
   var change =map_range(accelVal, 0, 15, 100,1500);
   var qchange = quantize(change, q_notes)
-    $("#logval").html(Math.round(orientEvent.beta));
+  $("#logval").html(Math.round(orientEvent.gamma));
   var interval = (new Date() - t)/1000;
 
   if(this.activated && ( interval >1/(accelVal+5))){
@@ -384,11 +384,15 @@ Graphic.prototype.touchDeactivate = function(e){
   this.activated = false;
   $fun.css("background-color","white");
     $("#press").html("PRESS");
+
+  emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0});
+  console.log('deactivate');
+
 }
 
 Graphic.prototype.accelHandler = function(accel){
  var h = accelVal;
- var h= map_range(accelVal, 0, 20, 0, 0.2);
+ var h= map_range(accelVal, 0, 20, 0, 0.1);
  var c  = HSVtoRGB(h+base_color,1,1);
  this.background_color = "rgb("+c.r+","+c.g+","+c.b+")" ;
  if(this.activated){
