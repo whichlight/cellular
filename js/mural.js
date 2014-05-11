@@ -19,21 +19,24 @@ socket.on('connect', function(){
   console.log('connected');
 });
 
-socket.on('mural', function(data){
-  var d = data.data;
 
-  if(!(d.id in cells)){
-    cells[d.id] = new Cell(d.id, d.color);
-  }
-
-  cells[d.id].read(d.actions);
-});
 
 
 //create a mobile object for each id, if it doesnt exist else update it
 
 $(document).ready(function(){
   initParticleSystem();
+
+
+  socket.on('mural', function(data){
+    var d = data.data;
+
+    if(!(d.id in cells)){
+      cells[d.id] = new Cell(d.id, d.color);
+    }
+
+    cells[d.id].read(d.actions);
+  });
 });
 
 
@@ -123,27 +126,32 @@ var initParticleSystem = function(){
 
    };
 
+
    var onParticleCreated = function( p ) {
+     //loop through cells
 
-     var position = p.position;
-     p.target.position = position;
-     p.velocity.x = 0;
-     p.velocity.y = 10;
-     var velocity = p.velocity;
-     p.target.velocity= velocity;
-     var target = p.target;
+     var id = Object.keys(cells)[randArray(Object.keys(cells))];
+     if(typeof(cells[id]) !== 'undefined' && cells[id].activated){
+       console.log(id);
+       var position = p.position;
+       p.target.position = position;
+       p.velocity.x = 0;
+       p.velocity.y = 10;
+       var velocity = p.velocity;
+       p.target.velocity= velocity;
+       var target = p.target;
 
-     if ( target ) {
-       if ( hue > 1 ) hue -= 1;
-       emitterpos.x = 0;
-       emitterpos.y = 0;
-       pointLight.position.x = emitterpos.x;
-       pointLight.position.y = emitterpos.y;
-       pointLight.position.z = 10;
-       particles.vertices[ target ] = p.position;
-       values_color[ target ].setHSL( hue, 0.6, 0.1 );
-       pointLight.color.setHSL( hue, 0.8, 0.5 );
-
+       if ( target ) {
+         if ( hue > 1 ) hue -= 1;
+         emitterpos.x = 0;
+         emitterpos.y = 0;
+         pointLight.position.x = emitterpos.x;
+         pointLight.position.y = emitterpos.y;
+         pointLight.position.z = 10;
+         particles.vertices[ target ] = p.position;
+         values_color[ target ].setHSL( cells[id].getHSL().h, 0.6, 0.1 );
+         pointLight.color.setHSL( cells[id].getHSL().h, 0.8, 0.5 );
+       }
      };
    };
 
@@ -255,7 +263,7 @@ var initParticleSystem = function(){
 
 function Cell(id, color){
   this.id = id;
-  this.color = color;
+  this.color = new THREE.Color(color);
   this.x;
   this.y;
   this.z;
@@ -272,7 +280,8 @@ Cell.prototype.update = function(x,y,z, gamma, beta, color){
   this.intensity = Math.max(x,y,z);
   this.activated = this.intensity > 0.5;
   if(this.activated){
-    this.color = color;
+    console.log('activated');
+    this.color.set(color);
 
     var lx = Math.cos(theta);
     var ly = Math.sin(theta);
@@ -316,9 +325,6 @@ Cell.prototype.step = function(){
 }
 
 
-//particle system
-
-
 
 function newpos( x, y, z ){ return new THREE.Vector3( x, y, z ); }
 
@@ -340,16 +346,14 @@ scene.add( group);
 
 
 
-
-
 function update(){
   //interface w particles
-/*
+
   for(var id in cells){
-    cells[id].step();
+      cells[id].step();
   }
 
-*/
+
   delta = speed * clock.getDelta();
   particleCloud.geometry.verticesNeedUpdate = true;
   attributes.size.needsUpdate = true;
@@ -418,4 +422,6 @@ var generateSprite = function() {
   return canvas;
 }
 
-
+var randArray = function(a){
+  return Math.floor(Math.random()*a.length);
+}
