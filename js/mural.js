@@ -21,7 +21,11 @@ socket.on('connect', function(){
   console.log('connected');
 });
 
-
+socket.on('removeCell', function(data){
+   var id = data.data;
+   delete cells[id];
+   console.log("removed id " + id);
+});
 
 
 //create a mobile object for each id, if it doesnt exist else update it
@@ -31,13 +35,16 @@ $(document).ready(function(){
 
 
   socket.on('mural', function(data){
-    var d = data.data;
-
-    if(!(d.id in cells)){
-      cells[d.id] = new Cell(d.id, d.color);
-    }
-
-    cells[d.id].read(d.actions);
+    //unpack muralevents, it is id and array
+    var motionEvents = data.data;
+    motionEvents.forEach(function(data){
+      var d = data;
+      if(!(d.id in cells)){
+        cells[d.id] = new Cell(d.id, d.color);
+        console.log("added cell " + d.id);
+      }
+      cells[d.id].read(d.actions);
+    });
   });
 });
 
@@ -79,27 +86,20 @@ var initParticleSystem = function(){
      texture:   { type: "t", value: texture }
    };
 
-
-
    var shaderMaterial = new THREE.ShaderMaterial( {
-
      uniforms: uniforms,
        attributes: attributes,
-
        vertexShader: document.getElementById( 'vertexshader' ).textContent,
        fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
-
        blending: THREE.AdditiveBlending,
        depthWrite: false,
        transparent: true
-
    });
 
    particleCloud = new THREE.ParticleSystem( particles, shaderMaterial );
 
    particleCloud.dynamic = true;
    // particleCloud.sortParticles = true;
-
    var vertices = particleCloud.geometry.vertices;
    var values_size = attributes.size.value;
    var values_color = attributes.pcolor.value;
@@ -176,7 +176,7 @@ var initParticleSystem = function(){
 
 
    sparksEmitter.addInitializer( new SPARKS.Velocity( new
-         SPARKS.PointZone( new THREE.Vector3( 0, 200, 0 ) ) ) );
+         SPARKS.PointZone( new THREE.Vector3( 0, 0, 0 ) ) ) );
 
    sparksEmitter.addAction( new SPARKS.Age() );
    sparksEmitter.addAction( new SPARKS.Accelerate( 0, -90, -100 ) );
