@@ -9,11 +9,47 @@
     </div>
     <script src="libs/jquery-1.10.1.min.js"></script>
     <script src="bower_components/threejs/build/three.min.js"></script>
-    <script src="bower_components/tweenjs/build/tween.min.js"></script>
+    <script src="libs/tween.min.js"></script>
     <script src="libs/Sparks.js"></script>
     <script src="libs/CanvasShaders.js"></script>
+
+    <script src="libs/CopyShader.js"></script>
+    <script src="libs/FilmShader.js"></script>
+    <script src="libs/FocusShader.js"></script>
+    <script src="libs/HorizontalBlurShader.js"></script>
+    <script src="libs/TriangleBlurShader.js"></script>
+    <script src="libs/VerticalBlurShader.js"></script>
+
+    <script src="libs/EffectComposer.js"></script>
+    <script src="libs/RenderPass.js"></script>
+    <script src="libs/ShaderPass.js"></script>
+    <script src="libs/MaskPass.js"></script>
+    <script src="libs/BloomPass.js"></script>
+    <script src="libs/FilmPass.js"></script>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/mural.js"></script>
+
+    <script type="x-shader/x-vertex" id="vertexshader">
+                attribute float size;
+                attribute vec3 pcolor;
+                varying vec3 vColor;
+                void main() {
+                    vColor = pcolor;
+                    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                    gl_PointSize = size * ( 100.0 / length( mvPosition.xyz ) );
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentshader">
+      uniform sampler2D texture;
+      varying vec3 vColor;
+      void main() {
+        vec4 outColor = texture2D( texture, gl_PointCoord );
+        gl_FragColor = outColor * vec4( vColor, 1.0 );
+      }
+    </script>
 
   </body>
 </html>
