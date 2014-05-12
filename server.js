@@ -59,6 +59,7 @@ io.sockets.on('connection', function(socket){
   socket.on('motion',function(data){
     data.id = socket.id;
     socket.broadcast.to('muralRoom').emit('mural', {data:[data]});
+    console.log(io.sockets.clients('muralRoom').length);
   });
 
   socket.on('disconnect', function() {
