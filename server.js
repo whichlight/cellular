@@ -35,12 +35,14 @@ function handler (req, res) {
 //push events every x seconds
 //add to list on events
 
+/*
 setInterval(function(){
   if(motionEvents.length>0){
     io.sockets.in('muralRoom').emit('mural',{data:motionEvents});
   }
   motionEvents = [];
 },emitRate);
+*/
 
 
 io.sockets.on('connection', function(socket){
@@ -56,7 +58,7 @@ io.sockets.on('connection', function(socket){
 
   socket.on('motion',function(data){
     data.id = socket.id;
-    motionEvents.push(data);
+    socket.broadcast.to('muralRoom').emit('mural', {data:[data]});
   });
 
   socket.on('disconnect', function() {
