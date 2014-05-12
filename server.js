@@ -38,10 +38,10 @@ function handler (req, res) {
 setInterval(function(){
   if(muralSockets.length>0 && motionEvents.length>0){
     muralSockets.forEach(function(m){
-      m.emit('mural',{data:motionEvents});
+      io.sockets.socket(m).emit('mural',{data:motionEvents});
     });
+    motionEvents = [];
   }
-  motionEvents = [];
 },emitRate);
 
 io.sockets.on('connection', function(socket){
@@ -49,7 +49,7 @@ io.sockets.on('connection', function(socket){
   console.log('connected on ' + socket.id);
 
   socket.on('identify', function(data){
-    muralSockets.push(socket);
+    muralSockets.push(socket.id);
     console.log("mural connected on " + socket.id);
   });
 
@@ -61,7 +61,7 @@ io.sockets.on('connection', function(socket){
 
   socket.on('disconnect', function() {
     console.log('Got disconnect!');
-    var index = muralSockets.indexOf(socket);
+    var index = muralSockets.indexOf(socket.id);
     console.log(index);
     if (index > -1) {
       muralSockets.splice(index, 1);
@@ -71,7 +71,7 @@ io.sockets.on('connection', function(socket){
       if(muralSockets.length>0){
         console.log("phone disconnected on " + socket.id);
         muralSockets.forEach(function(m){
-          m.emit('removeCell',{data: socket.id});
+          io.sockets.socket(m).emit('removeCell',{data: socket.id});
         });
       }
     }
