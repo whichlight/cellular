@@ -1,12 +1,13 @@
 var context;
 var $fun;
-var synth;
+var synth= {};
 var graphic;
 var emitter;
 var noteVal = 400;
 var t = new Date();
 var socket = io.connect('http://'+window.location.hostname);
 var isDesktop = false;
+var webAudioExists = false;
 
 
 //[x,y,z],color, type
@@ -15,8 +16,17 @@ socket.on('connect', function(){
   console.log('connected');
 });
 
+
+/*
+
+fallbacks
+
+if web audio doesnt work, use device orientation still for visual
+
+*/
+
 var accelEvent;
-var orientEvent;
+var orientEvent = {};
 var accelVal;
 var base_color = Math.random();
 
@@ -74,7 +84,15 @@ var checkFeatureSupport = function(){
 
 var setup = function(){
   checkFeatureSupport();
-  synth = new Synth();
+
+  if(typeof(context)!=="undefined"){
+    webAudioExists = true;
+  }
+
+  if(webAudioExists){
+    synth = new Synth();
+  }
+
   graphic = new Graphic();
   emitter = new SampleBatchEmitter();
 
@@ -109,25 +127,38 @@ var setup = function(){
 //
 var touchActivate = function(e){
   e.preventDefault();
-  synth.touchActivate(e);
+
+  if(webAudioExists){
+    synth.touchActivate(e);
+  }
+
   graphic.touchActivate(e);
 }
 
 var touchDeactivate = function(e){
   e.preventDefault();
-  synth.touchDeactivate(e);
+
+  if(webAudioExists){
+    synth.touchDeactivate(e);
+  }
   graphic.touchDeactivate(e);
 }
 
 function deviceMotionHandler(eventData) {
-  synth.accelHandler(eventData);
+  if(webAudioExists){
+    synth.accelHandler(eventData);
+  }
+
   graphic.accelHandler(eventData);
   var a = eventData.acceleration;
   emitter.pushd({x:a.x, y:a.y, z:a.z, gamma: orientEvent.gamma , beta: orientEvent.beta , color: graphic.background_color});
 }
 
 function devOrientHandler(eventData) {
-  synth.orientHandler(eventData);
+  if(webAudioExists){
+    synth.orientHandler(eventData);
+  }
+
   graphic.orientHandler(eventData);
 }
 
@@ -139,7 +170,7 @@ function desktopMotionHandler(eventData) {
   x = 16*(eventData.pageX -w/2)/w;
   y = 16*(-1*eventData.pageY + h/2)/h;
 
-  emitter.pushd({x: x, z: y, y:0, color: graphic.background_color});
+  emitter.pushd({x: x, z: y, y:0, color: graphic.background_color, beta: x});
   }
 
 }
@@ -175,7 +206,6 @@ SampleBatchEmitter.prototype.emitd = function(){
           type: "mobile",
           actions: that.data});
       that.data = [];
-      console.log('emit');
     }
   },that.emit_rate);
 }
@@ -205,7 +235,7 @@ Pluck.prototype.buildSynth = function(){
   this.filter.type = 0;
   this.filter.frequency.value = 440;
 
-  this.gain = context.createGainNode();
+  this.gain = context.createGain();
   this.gain.gain.value = this.volume;
   //decay
   this.osc.connect(this.filter); // Connect sound to output
@@ -229,7 +259,7 @@ Pluck.prototype.setVolume= function(v){
 Pluck.prototype.play = function(dur){
   var dur = this.duration || dur;
   this.osc.noteOn(0); // Play instantly
-  this.gain.gain.setTargetValueAtTime(0, 0, 0.3);
+  this.gain.gain.setTargetAtTime(0, 0, 0.3);
   var that = this;
   setTimeout(function(){
   //this looks funny because start and stop don't work on mobile yet
@@ -265,7 +295,7 @@ Drone.prototype.buildSynth = function(){
   this.filter.type = 0;
   this.filter.frequency.value = 440;
 
-  this.gain = context.createGainNode();
+  this.gain = context.createGain();
   this.gain.gain.value = this.volume;
   //decay
   this.osc.connect(this.filter); // Connect sound to output
@@ -379,17 +409,13 @@ function Graphic(){
 
 Graphic.prototype.touchActivate = function(e){
   this.activated = true;
-  $fun.css("background-color", "lime");
   $fun.css("background-color", this.background_color);
 }
 
 Graphic.prototype.touchDeactivate = function(e){
   this.activated = false;
   $fun.css("background-color","#2A0052");
-
   emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0});
-  console.log('deactivate');
-
 }
 
 Graphic.prototype.accelHandler = function(accel){
@@ -448,8 +474,7 @@ var s = function( sketch ) {
   };
   sketch.draw = function() {
     sketch.background(base_color,0,1);
-    console.log(graphic.background_color);
-    if(orientEvent.gamma !== null){
+    if(typeof(orientEvent)!== "undefined" && orientEvent.gamma !== null){
       var w = sketch.map(orientEvent.gamma, -180, 180, 0, 500);
       sketch.rect(w-20, 0, 40, 200);
       sketch.noStroke();
@@ -459,5 +484,5 @@ var s = function( sketch ) {
 };
 
 $("#info").click(function(){
-  alert("CELLULAR by Kawandeep Virdee and New American Public Art. Turn the sound up on your phone.  Hold your thumb on the screen and slowly move your entire phone. Then tilt it and shake it.  You will make sounds, and participate in the visuals.");
+  alert("CELLULAR by Kawandeep Virdee and New American Public Art. Turn the sound up on your phone.  Hold your thumb on the screen and slowly move your entire phone. Then tilt it and shake it.  You will make sounds, and participate in the visuals. Note: you will need to lock your phone orientation.");
 });

@@ -22,7 +22,7 @@ body{
 #press{
   width:100%;
   text-align:center;
-  font-size:200px;
+  font-size:150px;
   font-family:"helvetica";
   font-weight:900;
   color:white;
@@ -31,7 +31,7 @@ body{
 #title{
   width:100%;
   text-align:center;
-  font-size:150px;
+  font-size:100px;
   font-family:"helvetica";
   font-weight:900;
   color:#00FF04;
