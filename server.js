@@ -59,13 +59,11 @@ io.sockets.on('connection', function(socket){
   socket.on('motion',function(data){
     data.id = socket.id;
     socket.broadcast.to('muralRoom').emit('mural', {data:[data]});
-    console.log(io.sockets.clients('muralRoom').length);
   });
 
   socket.on('disconnect', function() {
     console.log('Got disconnect!');
     var index = muralSockets.indexOf(socket.id);
-    console.log(index);
     if (index > -1) {
       muralSockets.splice(index, 1);
       socket.leave('muralRoom');
