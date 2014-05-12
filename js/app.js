@@ -475,7 +475,7 @@ var s = function( sketch ) {
   sketch.draw = function() {
     sketch.background(base_color,0,1);
     if(typeof(orientEvent)!== "undefined" && orientEvent.gamma !== null){
-      var w = sketch.map(orientEvent.gamma, -180, 180, 0, 500);
+      var w = sketch.map(orientEvent.gamma, -90, 90, 0, 500);
       sketch.rect(w-20, 0, 40, 200);
       sketch.noStroke();
       sketch.fill(base_color,1,1);
