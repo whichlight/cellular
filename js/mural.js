@@ -25,8 +25,10 @@ socket.on('connect', function(){
 
 socket.on('removeCell', function(data){
    var id = data.data;
-   delete cells[id];
-   console.log("removed id " + id);
+   if(typeof(cells[id])!== "undefined"){
+     delete cells[id];
+     console.log("removed id " + id);
+   }
 });
 
 

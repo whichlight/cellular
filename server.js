@@ -36,13 +36,12 @@ function handler (req, res) {
 //add to list on events
 
 setInterval(function(){
-  if(muralSockets.length>0 && motionEvents.length>0){
-    muralSockets.forEach(function(m){
-      io.sockets.socket(m).emit('mural',{data:motionEvents});
-    });
-    motionEvents = [];
+  if(motionEvents.length>0){
+    io.sockets.in('muralRoom').emit('mural',{data:motionEvents});
   }
+  motionEvents = [];
 },emitRate);
+
 
 io.sockets.on('connection', function(socket){
 
@@ -50,6 +49,7 @@ io.sockets.on('connection', function(socket){
 
   socket.on('identify', function(data){
     muralSockets.push(socket.id);
+    socket.join('muralRoom');
     console.log("mural connected on " + socket.id);
   });
 
@@ -65,14 +65,13 @@ io.sockets.on('connection', function(socket){
     console.log(index);
     if (index > -1) {
       muralSockets.splice(index, 1);
+      socket.leave('muralRoom');
       console.log("mural disconnected on " + socket.id);
     }
     else {
       if(muralSockets.length>0){
         console.log("phone disconnected on " + socket.id);
-        muralSockets.forEach(function(m){
-          io.sockets.socket(m).emit('removeCell',{data: socket.id});
-        });
+        io.sockets.in('muralRoom').emit('removeCell',{data:socket.id});
       }
     }
   });
