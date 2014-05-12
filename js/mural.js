@@ -149,7 +149,7 @@ var initParticleSystem = function(){
            var velocity = p.velocity;
            p.target.velocity= velocity;
            particles.vertices[ target ] = p.position;
-           values_color[ target ].setHSL( 0.5+Math.random()*0.25, Math.random()*0.4, Math.random()*0.8 );
+           values_color[ target ].setHSL( 0.5+Math.random()*0.25, Math.random()*0.4, Math.random()*0.5 );
          }
        } else{
          var position = cells[id].emitterPos.clone();

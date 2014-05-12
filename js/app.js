@@ -38,8 +38,13 @@ map_range(accelVal, 0, 15, 100,1500);
  */
 
 $(document).ready(function(){
-  setup();
+    setup();
 });
+
+window.onload = function(){
+    containerNode = document.getElementById( 'canvas' );
+    myp5 = new p5(s, containerNode);
+}
 
 $("#press").css('top',$(window).height()/2);
 $("#logval").css('top',$(window).height()/4);
@@ -329,7 +334,6 @@ Synth.prototype.accelHandler = function(accel){
 
   var change =map_range(accelVal, 0, 15, 100,1500);
   var qchange = quantize(change, q_notes)
-  $("#logval").html(Math.round(orientEvent.gamma));
   var interval = (new Date() - t)/1000;
 
   if(this.activated && ( interval >1/(accelVal+5))){
@@ -377,13 +381,11 @@ Graphic.prototype.touchActivate = function(e){
   this.activated = true;
   $fun.css("background-color", "lime");
   $fun.css("background-color", this.background_color);
-    $("#press").html("MOVE");
 }
 
 Graphic.prototype.touchDeactivate = function(e){
   this.activated = false;
-  $fun.css("background-color","white");
-    $("#press").html("PRESS");
+  $fun.css("background-color","#2A0052");
 
   emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0});
   console.log('deactivate');
@@ -402,6 +404,9 @@ Graphic.prototype.accelHandler = function(accel){
 
 Graphic.prototype.orientHandler = function(orient){
 }
+
+
+
 
 /* accepts parameters
  * h  Object = {h:x, s:y, v:z}
@@ -434,3 +439,25 @@ function HSVtoRGB(h, s, v) {
 }
 
 
+var s = function( sketch ) {
+  var gray = 0;
+  sketch.setup = function() {
+    sketch.createCanvas(500, 200);
+    sketch.colorMode("hsb");
+    sketch.background(base_color,1,1);
+  };
+  sketch.draw = function() {
+    sketch.background(base_color,0,1);
+    console.log(graphic.background_color);
+    if(orientEvent.gamma !== null){
+      var w = sketch.map(orientEvent.gamma, -180, 180, 0, 500);
+      sketch.rect(w-20, 0, 40, 200);
+      sketch.noStroke();
+      sketch.fill(base_color,1,1);
+    }
+  }
+};
+
+$("#info").click(function(){
+  alert("CELLULAR by Kawandeep Virdee and New American Public Art. Turn the sound up on your phone.  Hold your thumb on the screen and slowly move your entire phone. Then tilt it and shake it.  You will make sounds, and participate in the visuals.");
+});

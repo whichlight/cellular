@@ -11,6 +11,7 @@
 body{
   overflow: hidden;
   margin:0px;
+ background-color:black;
 }
 
 canvas {
