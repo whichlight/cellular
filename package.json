@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "0.0.0-7",
+  "version": "0.0.0-8",
   "description": "art piece where moving your phone changes the visuals of a projection and also plays sounds",
   "main": "server.js",
   "scripts": {
@@ -22,6 +22,10 @@
     "url": "https://github.com/whichlight/cellular/issues"
   },
   "subdomain": "cellular",
+  "domains": [
+    "cell-flight.com",
+  "www.cell-flight.com"
+    ],
   "engines": {
     "node": "0.10.x"
   },
