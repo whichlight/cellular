@@ -24,13 +24,14 @@ canvas {
 
 #info{
   position: absolute;
-  text-align:center;
+  text-align:left;
   font-size:30px;
   font-family:"helvetica";
   font-weight:400;
   color:#AAA;
   bottom:0px;
   width:100%;
+  margin:20px;
 }
 
 
