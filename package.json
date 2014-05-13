@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "0.0.0-11",
+  "version": "0.0.0-12",
   "description": "art piece where moving your phone changes the visuals of a projection and also plays sounds",
   "main": "server.js",
   "scripts": {
