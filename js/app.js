@@ -258,7 +258,7 @@ Pluck.prototype.setVolume= function(v){
 
 Pluck.prototype.play = function(dur){
   var dur = this.duration || dur;
-  this.osc.noteOn(0); // Play instantly
+  this.osc.start(0); // Play instantly
   this.gain.gain.setTargetAtTime(0, 0, 0.3);
   var that = this;
   setTimeout(function(){
@@ -317,7 +317,7 @@ Drone.prototype.setVolume= function(v){
 }
 
 Drone.prototype.play = function(){
-  this.osc.noteOn(0); // Play instantly
+  this.osc.start(0); // Play instantly
 }
 
 Drone.prototype.stop = function(){
