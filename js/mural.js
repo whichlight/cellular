@@ -308,6 +308,7 @@ Cell.prototype.update = function(x,y,z, gamma, beta, color, touchX, touchY){
   this.activated = this.intensity > 0;
 
   if(this.activated){
+
     this.color.set(color);
     var theta =-1*gamma*0.0174532925 + Math.PI/2;
     var x = mapToCoord(touchX,window.innerWidth);
@@ -318,6 +319,12 @@ Cell.prototype.update = function(x,y,z, gamma, beta, color, touchX, touchY){
     this.velocity.y = 10*this.intensity * ly;
     this.emitterNewPos.x = x;
     this.emitterNewPos.y=y;
+    if(this.justOn){
+     this.emitterPos = this.emitterNewPos.clone();
+     this.justOn=false;
+    }
+  }else{
+   this.justOn=true;
   }
 
 }
