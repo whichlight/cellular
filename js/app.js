@@ -25,7 +25,7 @@ if web audio doesnt work, use device orientation still for visual
 
 */
 
-var accelEvent;
+var accelEvent = {x:1, y:0, z:0};
 var orientEvent = {};
 var accelVal;
 var base_color = Math.random();
@@ -103,10 +103,19 @@ var setup = function(){
 
 
   //add events
-  $fun.bind("mousedown", touchActivate);
-  $fun.bind("mouseup", touchDeactivate);
-  $fun.bind("touchstart", touchActivate);
-  $fun.bind("touchend", touchDeactivate);
+  hammertime = Hammer($fun[0], {
+    prevent_default: true,
+             no_mouseevents: true
+  })
+  .on('touch', function(event){
+    touchActivate(event);
+  })
+  .on('drag', function(event){
+    touchActivate(event);
+  })
+  .on('release', function(event){
+    touchDeactivate();
+  });
 
   if (window.DeviceMotionEvent) {
     window.addEventListener('devicemotion', deviceMotionHandler, false);
@@ -116,10 +125,8 @@ var setup = function(){
     window.addEventListener('deviceorientation', devOrientHandler, false);
   }
 
-  if(isDesktop){
-    $(window).mousemove(desktopMotionHandler);
-  }
 
+  accelEvent = {x:1, y:0, z:0};
 }
 
 
@@ -131,17 +138,15 @@ var touchActivate = function(e){
   if(webAudioExists){
     synth.touchActivate(e);
   }
-
   graphic.touchActivate(e);
 }
 
 var touchDeactivate = function(e){
-  e.preventDefault();
 
   if(webAudioExists){
-    synth.touchDeactivate(e);
+    synth.touchDeactivate();
   }
-  graphic.touchDeactivate(e);
+  graphic.touchDeactivate();
 }
 
 function deviceMotionHandler(eventData) {
@@ -151,7 +156,7 @@ function deviceMotionHandler(eventData) {
 
   graphic.accelHandler(eventData);
   var a = eventData.acceleration;
-  emitter.pushd({x:a.x, y:a.y, z:a.z, gamma: orientEvent.gamma , beta: orientEvent.beta , color: graphic.background_color});
+  accelEvent = a;
 }
 
 function devOrientHandler(eventData) {
@@ -170,7 +175,6 @@ function desktopMotionHandler(eventData) {
   x = 16*(eventData.pageX -w/2)/w;
   y = 16*(-1*eventData.pageY + h/2)/h;
 
-  emitter.pushd({x: x, z: y, y:0, color: graphic.background_color, beta: x});
   }
 
 }
@@ -335,6 +339,8 @@ function Synth(){
 }
 
 Synth.prototype.touchActivate= function(e){
+
+  if(!this.activated){
   var n = new Pluck(146.83*2);
   n.play();
   this.drones.forEach(function(d){
@@ -344,6 +350,7 @@ Synth.prototype.touchActivate= function(e){
   this.drones[0]= new Drone(this.droneRoot/2);
   this.drones[1]= new Drone(this.droneRoot);
   this.activated =  true;
+  }
 }
 
 Synth.prototype.touchDeactivate= function(e){
@@ -405,17 +412,29 @@ Synth.prototype.orientHandler = function(orient){
 function Graphic(){
   this.activated = false;;
   this.background_color="purple";
+  this.x=0;
+  this.y=0;
 }
 
 Graphic.prototype.touchActivate = function(e){
   this.activated = true;
+  var c = e.gesture.center;
+  var x = c.pageX;
+  var y = c.pageY;
+  var xRatio = x/$(window).width();
+  var yRatio = y/$(window).height();
+  this.x = xRatio;
+  this.y = yRatio;
+
+  emitter.pushd({x:Math.max(accelEvent.x,0.1), y:accelEvent.y, z:accelEvent.z, gamma: orientEvent.gamma , beta: orientEvent.beta , color: this.background_color, touchX: this.x, touchY: this.y});
+
   $fun.css("background-color", this.background_color);
 }
 
-Graphic.prototype.touchDeactivate = function(e){
+Graphic.prototype.touchDeactivate = function(){
   this.activated = false;
   $fun.css("background-color","#2A0052");
-  emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0});
+  emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0, touchX:this.x, touchY:this.y});
 }
 
 Graphic.prototype.accelHandler = function(accel){

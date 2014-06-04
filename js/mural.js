@@ -11,7 +11,8 @@ var speed = 50;
 var particleCloud, sparksEmitter, emitterPos;
 var delta = 1, clock = new THREE.Clock();
 
-var widthRange = 500;
+var widthRange = 800;
+var heightRange= 500;
 
 
 cells['screensaver']= {activated: true, step: function(){}};
@@ -123,7 +124,7 @@ var initParticleSystem = function(){
    var setTargetParticle = function() {
 
      var target = Pool.get();
-     values_size[ target ] = Math.random() * 100 + 50;
+     values_size[ target ] = Math.random() * 50 + 50;
 
      return target;
 
@@ -138,8 +139,8 @@ var initParticleSystem = function(){
        if(id=="screensaver"){
          var W = window.innerWidth*2;
          var x = Math.random()*W -W/2;
-         var z = -500-1*Math.random()*1000;
-         var position = new THREE.Vector3(x,800, z);
+         var z = -1*Math.random()*500;
+         var position = new THREE.Vector3(x,-100, z);
          p.position = position.clone();
          var target = p.target;
          if ( target ) {
@@ -147,11 +148,11 @@ var initParticleSystem = function(){
            emitterpos.y = position.y;
            emitterpos.z = position.z;
            p.velocity.x = 0;
-           p.velocity.y = 100;
+           p.velocity.y = 0;
            var velocity = p.velocity;
            p.target.velocity= velocity;
            particles.vertices[ target ] = p.position;
-           values_color[ target ].setHSL( 0.5+Math.random()*0.25, Math.random()*0.4, Math.random()*0.5 );
+           values_color[ target ].setHSL( 0.5+Math.random()*0.25, Math.random()*0.5, Math.random()*1 );
          }
        } else{
          var position = cells[id].emitterPos.clone();
@@ -166,7 +167,7 @@ var initParticleSystem = function(){
            emitterpos.x = cells[id].emitterPos.x;
            emitterpos.y = 0;
            particles.vertices[ target ] = p.position;
-           values_color[ target ].setHSL( cells[id].color.getHSL().h, 0.6, 0.1 );
+           values_color[ target ].setHSL( cells[id].color.getHSL().h, 1, 0.5 );
          }
        }
      };
@@ -192,7 +193,7 @@ var initParticleSystem = function(){
    emitterpos = new THREE.Vector3( 0, 0, 0 );
 
    sparksEmitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( emitterpos ) ) );
-   sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 15 ));
+   sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 2 ));
    sparksEmitter.addInitializer( new SPARKS.Target( null, setTargetParticle ) );
 
 
@@ -200,9 +201,9 @@ var initParticleSystem = function(){
          SPARKS.PointZone( new THREE.Vector3( 0, 0, 0 ) ) ) );
 
    sparksEmitter.addAction( new SPARKS.Age() );
-   sparksEmitter.addAction( new SPARKS.Accelerate( 0, -90, -100 ) );
+   sparksEmitter.addAction( new SPARKS.Accelerate( 0, 0, 0 ) );
    sparksEmitter.addAction( new SPARKS.Move() );
-   sparksEmitter.addAction( new SPARKS.RandomDrift( 90, 100, 2000 ) );
+   sparksEmitter.addAction( new SPARKS.RandomDrift( 700, 700, 1000) );
 
 
    sparksEmitter.addCallback( "created", onParticleCreated );
@@ -278,6 +279,12 @@ var initParticleSystem = function(){
 
 }
 
+function mapToCoord(val, size){
+  var w = val*size;
+  var pos = (-1*size/2)+(w);
+  return pos;
+}
+
 
 function Cell(id, color){
   this.id = id;
@@ -291,26 +298,28 @@ function Cell(id, color){
   this.activated = false;
   this.intensity = 0;
   this.angle;
-  var W = window.innerWidth;
-  var w = Math.random()*widthRange;
-  var xpos = (-1*W/2)+ ((W - widthRange)/2)+(w)
-  this.emitterPos = new THREE.Vector3(xpos,0,0);
-
+  this.emitterPos = new THREE.Vector3(0,0,0);
+  this.justOn = true;
+  this.emitterNewPos = new THREE.Vector3(0,0,0);
 }
 
-Cell.prototype.update = function(x,y,z, gamma, beta, color){
+Cell.prototype.update = function(x,y,z, gamma, beta, color, touchX, touchY){
   this.intensity = Math.max(x,y,z);
-  this.activated = this.intensity > 0.5;
-
+  this.activated = this.intensity > 0;
 
   if(this.activated){
     this.color.set(color);
     var theta =-1*gamma*0.0174532925 + Math.PI/2;
+    var x = mapToCoord(touchX,window.innerWidth);
+    var y = mapToCoord(1-touchY,window.innerHeight);
     var lx = Math.cos(theta);
     var ly = Math.sin(theta);
-    this.velocity.x = 20*this.intensity * lx;
-    this.velocity.y = 20*this.intensity * ly;
+    this.velocity.x = 10*this.intensity * lx;
+    this.velocity.y = 10*this.intensity * ly;
+    this.emitterNewPos.x = x;
+    this.emitterNewPos.y=y;
   }
+
 }
 
 var bounding = function(val){
@@ -342,9 +351,13 @@ Cell.prototype.step = function(){
   if (this.timeline.length >0){
     if(this.timeline[0].time < new Date().getTime()){
       var a = this.timeline.shift();
-      this.update(a.x, a.y, a.z, a.gamma, a.beta, a.color);
+      this.update(a.x, a.y, a.z, a.gamma, a.beta, a.color, a.touchX, a.touchY);
     }
   }
+  var c = new THREE.Vector3();
+  c.subVectors(this.emitterNewPos, this.emitterPos);
+  c.multiplyScalar(0.1);
+  this.emitterPos.add(c);
 }
 
 
