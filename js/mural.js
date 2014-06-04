@@ -298,9 +298,9 @@ function Cell(id, color){
   this.activated = false;
   this.intensity = 0;
   this.angle;
-  this.emitterPos = new THREE.Vector3(0,0,0);
+  this.emitterPos = new THREE.Vector3(0,0,-100);
   this.justOn = true;
-  this.emitterNewPos = new THREE.Vector3(0,0,0);
+  this.emitterNewPos = new THREE.Vector3(0,0,-100);
 }
 
 Cell.prototype.update = function(x,y,z, gamma, beta, color, touchX, touchY){

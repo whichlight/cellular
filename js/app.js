@@ -439,7 +439,7 @@ Graphic.prototype.touchDeactivate = function(){
 
 Graphic.prototype.accelHandler = function(accel){
  var h = accelVal;
- var h= map_range(accelVal, 0, 20, 0, 0.1);
+ var h= map_range(accelVal, 0, 20, 0, 0.2);
  var c  = HSVtoRGB(h+base_color,1,1);
  this.background_color = "rgb("+c.r+","+c.g+","+c.b+")" ;
  if(this.activated){
