@@ -377,7 +377,7 @@ Cell.prototype.step = function(){
   }
   var c = new THREE.Vector3();
   c.subVectors(this.emitterNewPos, this.emitterPos);
-  c.multiplyScalar(0.1);
+  c.multiplyScalar(0.05);
   this.emitterPos.add(c);
 }
 
