@@ -484,6 +484,39 @@ var randArray = function(a){
 }
 
 
+function SimpleDrone(f, vol){
+  this.filter;
+  this.gain;
+  this.osc;
+  this.played = false;
+  this.volume = vol;
+  this.pitch = f;
+  this.buildSynth();
+  this.play();
+}
+
+SimpleDrone.prototype.buildSynth = function(){
+  this.osc = context.createOscillator(); // Create sound source
+  this.osc.type = 2;
+  this.osc.frequency.value = this.pitch;
+
+  this.filter = context.createBiquadFilter();
+  this.filter.type = 0;
+  this.filter.frequency.value = 200;
+
+  this.gain = context.createGain();
+  this.gain.gain.value = this.volume;
+  //decay
+  this.osc.connect(this.filter); // Connect sound to output
+  this.filter.connect(this.gain);
+  this.gain.connect(context.destination);
+}
+
+SimpleDrone.prototype.play = function(){
+  this.osc.start(0); // Play instantly
+}
+
+
 function Drone(f, vol){
   this.filter;
   this.gain;
@@ -510,14 +543,41 @@ Drone.prototype.buildSynth = function(){
   this.lfoGain.gain.value = 40;
   this.lfo.connect(this.lfoGain);
   this.lfoGain.connect(this.osc.frequency);
-  this.lfo.start(0);
+  this.lfo.start(1);
 
   this.filter = context.createBiquadFilter();
   this.filter.type = 0;
-  this.filter.frequency.value = 250;
+  this.filter.frequency.value = 100;
+
+  //lfo to filter
+  this.filtlfo = context.createOscillator();
+  this.filtlfo.type =0;
+  this.filtlfo.frequency.value = 0.05;
+  this.filtlfoGain = context.createGain();
+  this.filtlfoGain.gain.value = 100;
+  this.filtlfo.connect(this.filtlfoGain);
+  this.filtlfoGain.connect(this.filter.frequency);
+  this.filtlfo.start(2);
+
+
+
 
   this.gain = context.createGain();
   this.gain.gain.value = this.volume;
+
+
+  //lfo to gain
+  //
+  this.gainlfo = context.createOscillator();
+  this.gainlfo.type =0;
+  this.gainlfo.frequency.value = 0.05;
+  this.gainlfoGain = context.createGain();
+  this.gainlfoGain.gain.value = 0.2;
+  this.gainlfo.connect(this.gainlfoGain);
+  this.gainlfoGain.connect(this.gain.gain);
+  this.gainlfo.start(3);
+
+
   //decay
   this.osc.connect(this.filter); // Connect sound to output
   this.filter.connect(this.gain);
@@ -563,7 +623,10 @@ function initSynth(){
 //    var d = new Drone(note/2, 0.4);
   //  var d = new Drone(note/4, 0.6);
     var d = new Drone(note, 0.6);
-    var d = new Drone(220, 0.2);
+    setTimeout(function(){var d = new Drone(220, 0.4);},6000);
+    setTimeout(function(){var d = new Drone(146.83*2, 0.2);},10000);
+    setTimeout(function(){var d = new Drone(220*2, 0.4);},15000);
+   var e =  new SimpleDrone(146.83/2, 0.3);
     console.log('synth');
   }
 }
