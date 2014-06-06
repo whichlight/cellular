@@ -22,10 +22,24 @@ body{
 #press{
   width:100%;
   text-align:center;
-  font-size:150px;
+  font-size:130px;
   font-family:"helvetica";
   font-weight:900;
   color:white;
+  margin-left:20px;
+  z-index:10;
+  display:block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#directions{
+  text-align:center;
+  width: 50%;
+  height: 50%;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
 }
 
 #title{
@@ -34,7 +48,8 @@ body{
   font-size:100px;
   font-family:"helvetica";
   font-weight:900;
-  color:#00FF04;
+  color:#00FFEE;
+  z-index:10;
 }
 
 #info{
@@ -51,6 +66,8 @@ body{
 
 
 #canvas{
- margin-top:50px;
+ top:0px;
+ position:absolute;
+ z-index:-1;
 }
 

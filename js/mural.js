@@ -14,6 +14,10 @@ var delta = 1, clock = new THREE.Clock();
 var widthRange = 800;
 var heightRange= 500;
 
+var particles;
+var Pool;
+
+var context;
 
 cells['screensaver']= {activated: true, step: function(){}};
 
@@ -37,6 +41,7 @@ socket.on('removeCell', function(data){
 
 $(document).ready(function(){
   initParticleSystem();
+  initSynth();
 
   socket.on('mural', function(data){
     //unpack muralevents, it is id and array
@@ -55,8 +60,8 @@ $(document).ready(function(){
 
 var initParticleSystem = function(){
    var particlesLength = 70000;
-   var particles = new THREE.Geometry();
-   var Pool = {
+   particles = new THREE.Geometry();
+   Pool = {
      __pools: [],
      // Get a new Vector
      get: function() {
@@ -138,7 +143,8 @@ var initParticleSystem = function(){
      if(typeof(cells[id]) !== 'undefined' && cells[id].activated){
        if(id=="screensaver"){
          var W = window.innerWidth*2;
-         var x = Math.random()*W -W/2;
+         var w = W*0.8;
+         var x = Math.random()*w -(w)/2;
          var z = -1*Math.random()*500;
          var position = new THREE.Vector3(x,-100, z);
          p.position = position.clone();
@@ -193,7 +199,7 @@ var initParticleSystem = function(){
    emitterpos = new THREE.Vector3( 0, 0, 0 );
 
    sparksEmitter.addInitializer( new SPARKS.Position( new SPARKS.PointZone( emitterpos ) ) );
-   sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 2 ));
+   sparksEmitter.addInitializer( new SPARKS.Lifetime( 1, 6 ));
    sparksEmitter.addInitializer( new SPARKS.Target( null, setTargetParticle ) );
 
 
@@ -201,13 +207,21 @@ var initParticleSystem = function(){
          SPARKS.PointZone( new THREE.Vector3( 0, 0, 0 ) ) ) );
 
    sparksEmitter.addAction( new SPARKS.Age() );
-   sparksEmitter.addAction( new SPARKS.Accelerate( 0, 0, 0 ) );
+   sparksEmitter.addAction( new SPARKS.Accelerate( 0, 0, -10 ) );
    sparksEmitter.addAction( new SPARKS.Move() );
-   sparksEmitter.addAction( new SPARKS.RandomDrift( 700, 700, 1000) );
+   sparksEmitter.addAction( new SPARKS.RandomDrift( 200, 200, 400) );
 
 
    sparksEmitter.addCallback( "created", onParticleCreated );
    sparksEmitter.addCallback( "dead", onParticleDead );
+   sparksEmitter.addCallback("updated", function(p){
+     var target = p.target;
+     if(target){
+      if(values_size[target]>20){
+       values_size[target]-=0.4;
+      }
+     }
+   });
    //sparksEmitter.addCallback("loopUpdated", engineLoopUpdate);
 
 
@@ -467,4 +481,89 @@ var generateSprite = function() {
 
 var randArray = function(a){
   return Math.floor(Math.random()*a.length);
+}
+
+
+function Drone(f, vol){
+  this.filter;
+  this.gain;
+  this.osc;
+  this.played = false;
+  this.volume = vol;
+  this.pitch = f;
+  this.buildSynth();
+  this.play();
+}
+
+
+Drone.prototype.buildSynth = function(){
+  this.osc = context.createOscillator(); // Create sound source
+  this.osc.type = 2;
+  this.osc.frequency.value = this.pitch;
+
+
+  //lfo to osc
+  this.lfo = context.createOscillator(); // Create sound source
+  this.lfo.type = 1;
+  this.lfo.frequency.value = 100;
+  this.lfoGain = context.createGain(); // Create sound source
+  this.lfoGain.gain.value = 40;
+  this.lfo.connect(this.lfoGain);
+  this.lfoGain.connect(this.osc.frequency);
+  this.lfo.start(0);
+
+  this.filter = context.createBiquadFilter();
+  this.filter.type = 0;
+  this.filter.frequency.value = 250;
+
+  this.gain = context.createGain();
+  this.gain.gain.value = this.volume;
+  //decay
+  this.osc.connect(this.filter); // Connect sound to output
+  this.filter.connect(this.gain);
+  this.gain.connect(context.destination);
+}
+
+Drone.prototype.setPitch = function(p){
+  this.osc.frequency.value = p;
+}
+
+Drone.prototype.setFilter = function(f){
+  this.filter.frequency.value = f;
+}
+
+Drone.prototype.setVolume= function(v){
+  this.gain.gain.value = v;
+  this.volume = v;
+}
+
+Drone.prototype.play = function(){
+  this.osc.start(0); // Play instantly
+}
+
+Drone.prototype.stop = function(){
+    this.setVolume(0);
+    this.osc.disconnect();
+    return false;
+}
+
+
+function initSynth(){
+  try{
+    window.AudioContext = window.AudioContext||window.webkitAudioContext;
+    context = new AudioContext();
+  }
+  catch (err){
+    alert('web audio not supported');
+  }
+
+  if(typeof(context)!="undefined"){
+    var droneRoot = randArray([146.83, 196, 220.00]);
+    var note = 146.83;
+//    var d = new Drone(note/2, 0.4);
+  //  var d = new Drone(note/4, 0.6);
+    var d = new Drone(note, 0.6);
+    var d = new Drone(220, 0.2);
+    console.log('synth');
+  }
 }

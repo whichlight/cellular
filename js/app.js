@@ -8,6 +8,7 @@ var t = new Date();
 var socket = io.connect('http://'+window.location.hostname);
 var isDesktop = false;
 var webAudioExists = false;
+var touchE;
 
 
 //[x,y,z],color, type
@@ -419,32 +420,33 @@ function Graphic(){
 Graphic.prototype.touchActivate = function(e){
   this.activated = true;
   var c = e.gesture.center;
-  var x = c.pageX;
-  var y = c.pageY;
-  var xRatio = x/$(window).width();
-  var yRatio = y/$(window).height();
+  this.cx = c.pageX;
+  this.cy = c.pageY;
+  var xRatio = this.cx/$(window).width();
+  var yRatio = this.cy/$(window).height();
   this.x = xRatio;
   this.y = yRatio;
+  this.decColor=base_color;
 
   emitter.pushd({x:Math.max(accelEvent.x,0.1), y:accelEvent.y, z:accelEvent.z, gamma: orientEvent.gamma , beta: orientEvent.beta , color: this.background_color, touchX: this.x, touchY: this.y});
 
-  $fun.css("background-color", this.background_color);
+  //$fun.css("background-color", this.background_color);
+  $("#directions").hide();
 }
 
 Graphic.prototype.touchDeactivate = function(){
   this.activated = false;
-  $fun.css("background-color","#2A0052");
   emitter.data.push({x:0, y:0, z:0, gamma: 0, beta: 0, color: graphic.background_color, deltaTime:0, touchX:this.x, touchY:this.y});
+  $("#directions").show();
 }
 
 Graphic.prototype.accelHandler = function(accel){
  var h = accelVal;
  var h= map_range(accelVal, 0, 20, 0, 0.2);
  var c  = HSVtoRGB(h+base_color,1,1);
+ this.decColor = h+base_color;
+ if(this.decColor>1){this.decColor--;}
  this.background_color = "rgb("+c.r+","+c.g+","+c.b+")" ;
- if(this.activated){
-   $fun.css("background-color", this.background_color);
- }
 }
 
 Graphic.prototype.orientHandler = function(orient){
@@ -483,21 +485,43 @@ function HSVtoRGB(h, s, v) {
     };
 }
 
+function drawCircle(sketch, radius, offset){
+       sketch.strokeWeight(20);
+       sketch.noFill();
+       sketch.stroke(0,0,1);
+       sketch.ellipse(graphic.cx+offset,graphic.cy,radius,radius);
+
+}
+
+function circleGroup(sketch, offset){
+
+      for(var i=0; i<5; i++){
+      drawCircle(sketch,500-i*60, i*offset);
+      }
+}
+
 
 var s = function( sketch ) {
   var gray = 0;
   sketch.setup = function() {
-    sketch.createCanvas(500, 200);
+    sketch.createCanvas(window.innerWidth, window.innerHeight);
     sketch.colorMode("hsb");
-    sketch.background(base_color,1,1);
+    sketch.background(0.75,1,0.32);
   };
   sketch.draw = function() {
-    sketch.background(base_color,0,1);
-    if(typeof(orientEvent)!== "undefined" && orientEvent.gamma !== null){
-      var w = sketch.map(orientEvent.gamma, -90, 90, 0, 500);
-      sketch.rect(w-20, 0, 40, 200);
-      sketch.noStroke();
-      sketch.fill(base_color,1,1);
+    if(!graphic.activated){
+      sketch.background(0.75,1,0.32);
+    }
+    if(graphic.activated){
+      var offset;
+      if(typeof(orientEvent)!== "undefined" && orientEvent.gamma !== null){
+        offset  = sketch.map(orientEvent.gamma, -90, 90, -1, 1);
+      } else {
+        offset = 0;
+      }
+      offset*=150;
+      sketch.background(graphic.decColor,1,1);
+      circleGroup(sketch, offset);
     }
   }
 };
