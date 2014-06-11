@@ -34,6 +34,11 @@ canvas {
   margin-bottom:20px;
 }
 
+#info a, #info-right a{
+  color:rgb(126, 229, 255);
+  text-decoration:none;
+}
+
 
 #info-right{
   position: absolute;

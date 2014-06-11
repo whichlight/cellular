@@ -55,6 +55,11 @@ io.sockets.on('connection', function(socket){
     console.log("mural connected on " + socket.id);
   });
 
+  socket.on('clear', function(data){
+    muralSockets.push(socket.id);
+    socket.broadcast.to('muralRoom').emit('clear', {});
+  });
+
 
   socket.on('motion',function(data){
     data.id = socket.id;

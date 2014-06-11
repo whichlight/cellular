@@ -57,6 +57,15 @@ $(document).ready(function(){
   });
 });
 
+var clearMural = function(){
+  cells = {};
+  cells['screensaver']= {activated: true, step: function(){}};
+}
+
+socket.on('clear', function(data){
+  clearMural();
+  console.log('cleared');
+});
 
 var initParticleSystem = function(){
    var particlesLength = 70000;
@@ -129,7 +138,7 @@ var initParticleSystem = function(){
    var setTargetParticle = function() {
 
      var target = Pool.get();
-     values_size[ target ] = Math.random() * 50 + 50;
+     values_size[ target ] = Math.random() * 100 + 50;
 
      return target;
 
@@ -326,7 +335,7 @@ Cell.prototype.update = function(x,y,z, gamma, beta, color, touchX, touchY){
     this.color.set(color);
     var theta =-1*gamma*0.0174532925 + Math.PI/2;
     var x = mapToCoord(touchX,window.innerWidth);
-    var y = mapToCoord(1-touchY,window.innerHeight);
+    var y = mapToCoord(1-touchY+0.2,window.innerHeight);
     var lx = Math.cos(theta);
     var ly = Math.sin(theta);
     this.velocity.x = 10*this.intensity * lx;
@@ -517,13 +526,14 @@ SimpleDrone.prototype.play = function(){
 }
 
 
-function Drone(f, vol){
+function Drone(f, vol, lfo_rate){
   this.filter;
   this.gain;
   this.osc;
   this.played = false;
   this.volume = vol;
   this.pitch = f;
+  this.lfo_rate = lfo_rate;
   this.buildSynth();
   this.play();
 }
@@ -543,7 +553,7 @@ Drone.prototype.buildSynth = function(){
   this.lfoGain.gain.value = 40;
   this.lfo.connect(this.lfoGain);
   this.lfoGain.connect(this.osc.frequency);
-  this.lfo.start(1);
+  this.lfo.start(0);
 
   this.filter = context.createBiquadFilter();
   this.filter.type = 0;
@@ -552,12 +562,12 @@ Drone.prototype.buildSynth = function(){
   //lfo to filter
   this.filtlfo = context.createOscillator();
   this.filtlfo.type =0;
-  this.filtlfo.frequency.value = 0.05;
+  this.filtlfo.frequency.value = this.lfo_rate;
   this.filtlfoGain = context.createGain();
   this.filtlfoGain.gain.value = 100;
   this.filtlfo.connect(this.filtlfoGain);
   this.filtlfoGain.connect(this.filter.frequency);
-  this.filtlfo.start(2);
+  this.filtlfo.start(0);
 
 
 
@@ -572,10 +582,10 @@ Drone.prototype.buildSynth = function(){
   this.gainlfo.type =0;
   this.gainlfo.frequency.value = 0.05;
   this.gainlfoGain = context.createGain();
-  this.gainlfoGain.gain.value = 0.2;
+  this.gainlfoGain.gain.value = 0.05;
   this.gainlfo.connect(this.gainlfoGain);
   this.gainlfoGain.connect(this.gain.gain);
-  this.gainlfo.start(3);
+  this.gainlfo.start(0);
 
 
   //decay
@@ -620,13 +630,14 @@ function initSynth(){
   if(typeof(context)!="undefined"){
     var droneRoot = randArray([146.83, 196, 220.00]);
     var note = 146.83;
-//    var d = new Drone(note/2, 0.4);
-  //  var d = new Drone(note/4, 0.6);
-    var d = new Drone(note, 0.6);
-    setTimeout(function(){var d = new Drone(220, 0.4);},6000);
-    setTimeout(function(){var d = new Drone(146.83*2, 0.2);},10000);
-    setTimeout(function(){var d = new Drone(220*2, 0.4);},15000);
-   var e =  new SimpleDrone(146.83/2, 0.3);
+    setTimeout(function(){var d = new Drone(note/2, 0.4, 0.08);},1000);
+    setTimeout(function(){var d = new Drone(note, 0.5, 0.05);},2000);
+    setTimeout(function(){var d = new Drone(220, 0.4, 0.08);},3000);
+    setTimeout(function(){var d = new Drone(146.83*2, 0.5, 0.05);},7000);
+    setTimeout(function(){var e = new Drone(220*2, 0.5, 0.03);},8000);
+   var e =  new SimpleDrone(146.83/2, 0.1);
     console.log('synth');
   }
 }
+
+// check drone. test w phone
