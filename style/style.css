@@ -55,13 +55,31 @@ body{
 #info{
   position: absolute;
   text-align:right;
-  font-size:100px;
+  font-size:60px;
   font-family:"helvetica";
   font-weight:900;
   color:white;
   bottom:0px;
   right:0px;
   z-index:10;
+}
+
+
+#me{
+  position: absolute;
+  text-align:right;
+  font-size:60px;
+  font-family:"helvetica";
+  font-weight:900;
+  color:white;
+  bottom:0px;
+  left:0px;
+  z-index:10;
+}
+
+#me a{
+  text-decoration:none;
+  color:white;
 }
 
 
