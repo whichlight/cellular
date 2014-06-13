@@ -17,6 +17,10 @@ var heightRange= 500;
 var particles;
 var Pool;
 
+var clearInterval = 20;
+var clearStartTime = 0;
+var clearDeltaTime = 0;
+
 var context;
 
 cells['screensaver']= {activated: true, step: function(){}};
@@ -424,6 +428,15 @@ function update(){
   particleCloud.geometry.verticesNeedUpdate = true;
   attributes.size.needsUpdate = true;
   attributes.pcolor.needsUpdate = true;
+
+  //clear things regularly
+
+  clearDeltaTime = new Date().getTime() - clearStartTime;
+  if(clearDeltaTime > (clearInterval * 1000)){
+    clearMural();
+    console.log('cleared');
+    clearStartTime = new Date().getTime();
+  }
 }
 
 function render() {
