@@ -23,8 +23,9 @@ canvas {
 
 
 #info{
+  width:100%;
   position: absolute;
-  text-align:left;
+  text-align:center;
   font-size:20px;
   font-family:"helvetica";
   font-weight:400;
