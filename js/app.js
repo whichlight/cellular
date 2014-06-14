@@ -528,7 +528,7 @@ var s = function( sketch ) {
 };
 
 var infoAlert = function(){
-  alert("CELLULAR by Kawandeep Virdee of New American Public Art. Turn the sound up on your phone.  Hold your thumb on the screen and slowly move your entire phone. Then tilt it and shake it.  Open up cell-flight.com/mural.html on your laptop. You will make sounds, and participate in the visuals.  Note: you will need to lock your phone orientation.");
+  alert("CELLULAR by Kawandeep Virdee of New American Public Art. Turn the sound up on your phone.  Hold your thumb on the screen and slowly move your entire phone. Then tilt it and shake it.  The collaborative visuals are on cell-flight.com/mural.html. You will make sounds, and participate in the visuals.  Note: you will need to lock your phone orientation.");
 
 }
 

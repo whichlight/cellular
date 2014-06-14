@@ -44,6 +44,9 @@ socket.on('removeCell', function(data){
 //create a mobile object for each id, if it doesnt exist else update it
 
 $(document).ready(function(){
+  if(!window.WebGLRenderingContext){
+    alert('open this up in a browser that supports webgl')
+  }
   initParticleSystem();
   initSynth();
 
