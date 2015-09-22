@@ -65,6 +65,18 @@ var checkFeatureSupport = function(){
   try{
     window.AudioContext = window.AudioContext||window.webkitAudioContext;
     context = new AudioContext();
+
+    var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+    if (iOS) {
+        window.addEventListener('touchend', function() {
+            var buffer = context.createBuffer(1, 1, 22050);
+            var source = context.createBufferSource();
+            source.buffer = buffer;
+            source.connect(context.destination);
+            source.start(0);
+        }, false);
+    }
+
   }
   catch (err){
     alert('web audio not supported');
